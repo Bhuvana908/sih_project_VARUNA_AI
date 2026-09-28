@@ -1,0 +1,58 @@
+# ============================================================
+# Configuration for Regime-Aware AI Post-Processing Pipeline
+# SIH Problem Statement ID: 26080
+# ============================================================
+
+domain:
+  grid_size: 24            # coarse lat x lon grid representing the Indian domain
+  n_regimes: 5
+  regime_names:
+    - "Active Monsoon"
+    - "Break Monsoon"
+    - "Monsoon Depression"
+    - "Orographic Rainfall"
+    - "Western Disturbance"
+
+data:
+  n_seasons: 8              # number of synthetic monsoon (JJAS) seasons to generate
+  season_length_days: 122   # ~ June-Sept
+  test_seasons: 1           # last N seasons held out for testing
+  seed: 42
+  sample_dir: "data/sample"
+
+vae:
+  latent_dim: 8
+  epochs: 60
+  batch_size: 32
+  lr: 0.001
+  beta: 0.5                 # KL weight
+
+gmm:
+  n_components: 5
+  covariance_type: "full"
+
+subdaily:
+  steps_per_day: 8          # genuine sub-daily atmospheric snapshots per day (e.g. 8 = every 3h)
+  wobble_std: 0.06          # noise added to the sub-daily regime-weight trajectory within a day
+
+unet:
+  base_channels: 16
+  dropout_p: 0.15           # used for MC-Dropout at inference too
+  epochs: 80
+  batch_size: 16
+  lr: 0.0005
+  heavy_rain_weight_threshold_mm: 65.0
+  heavy_rain_weight_factor: 4.0   # upweight loss where obs rain exceeds threshold
+
+uncertainty:
+  mc_dropout_passes: 50
+  quantiles: [0.1, 0.5, 0.9]
+  heavy_rain_threshold_mm: 100.0
+
+verification:
+  thresholds_mm: [15, 65, 115]   # IMD-style: moderate / heavy / very heavy
+  fss_neighborhood: 3            # window size (grid points) for Fractions Skill Score
+
+paths:
+  models_dir: "models"
+  outputs_dir: "outputs"
